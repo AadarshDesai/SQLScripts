@@ -1,0 +1,5 @@
+SELECT 
+	CAST('123' AS INT) [String To INT],
+	CAST(123 AS VARCHAR) [INT To String],
+	CAST('2025-08-20' AS DATE) AS [String To Date],
+	CAST('2025-08-20' AS DATETIME2) AS [String To DateTime]
