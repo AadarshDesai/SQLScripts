@@ -274,6 +274,98 @@ FROM Sales.Orders
 
 
 --Rank the orders based on their sales from highest to lowest 
+SELECT
+	OrderID,
+	ProductID,
+	Sales,
+	ROW_NUMBER() OVER(ORDER BY Sales DESC) AS RowNumberRank,
+	RANK() OVER(ORDER BY Sales DESC) AS RankRank,
+	DENSE_RANK() OVER(ORDER BY Sales DESC) AS DenseRank
+FROM Sales.Orders
+
+--Find the top highest sales for each product
+SELECT 
+	*
+FROM
+(SELECT
+	OrderID,
+	ProductID,
+	Sales,
+	ROW_NUMBER() OVER(PARTITION BY ProductID ORDER BY Sales DESC) AS salesRank
+FROM Sales.Orders
+) t WHERE salesRank = 1
+
+--Find the lowest two customers based on their total sales 
+SELECT *
+FROM
+(SELECT
+	CustomerID,
+	SUM(Sales) AS TotalSales,
+	ROW_NUMBER() OVER(ORDER BY SUM(Sales)) AS salesRank
+FROM Sales.Orders
+GROUP BY CustomerID
+)t WHERE salesRank <= 2
+
+SELECT
+	ROW_NUMBER() OVER(ORDER BY OrderID, OrderDate) AS UniqueID,
+	*
+FROM Sales.OrdersArchive
+
+
+--Identify duplicate rows in the table ordersArchive
+--And return a clean result without any duplicates
+SELECT
+	*
+FROM
+(	SELECT
+		ROW_NUMBER() OVER(PARTITION BY OrderID ORDER BY CreationTime DESC) AS rn,
+		*
+	FROM Sales.OrdersArchive
+)t WHERE rn = 1
+
+--NTILE()
+
+SELECT
+	OrderID,
+	Sales,
+	NTILE(5) OVER(ORDER BY Sales DESC) AS buckets
+FROM Sales.Orders
+
+--Segment all orders into 3 categories: high, medium and low sales. 
+
+
+SELECT
+	OrderID,
+	Sales,
+	--NTILE(3) OVER(ORDER BY Sales DESC) AS salesBucket,
+	CASE NTILE(3) OVER(ORDER BY Sales DESC)
+		WHEN 1 THEN 'High'
+		WHEN 2 THEN 'Medium'
+		WHEN 3 THEN 'Low'
+		ELSE 'N/A'
+	END AS category
+FROM Sales.Orders
+
+--In order to export the data divide the orders into 2 groups
+SELECT
+	NTILE(2) OVER(ORDER BY OrderID) AS bucket,
+	*
+FROM Sales.Orders;
+
+--USE of CUME_DIST and PERCENT_RANK()
+--FInd the products that fall within the highest 40% of prices
+SELECT 
+	Product,
+	Price, 
+	distRank * 100
+FROM
+(SELECT
+	Product,
+	Price,
+	CUME_DIST() OVER(ORDER BY Price DESC) distRank
+FROM Sales.Products
+)t WHERE distRank <= 0.4
+
 
 SELECT
 	*
