@@ -357,12 +357,14 @@ FROM Sales.Orders;
 SELECT 
 	Product,
 	Price, 
-	distRank * 100
+	CONCAT(distRank * 100, '%'),
+	CONCAT(perRank * 100, '%')
 FROM
 (SELECT
 	Product,
 	Price,
-	CUME_DIST() OVER(ORDER BY Price DESC) distRank
+	CUME_DIST() OVER(ORDER BY Price DESC) distRank,
+	PERCENT_RANK() OVER(ORDER BY Price DESC) perRank
 FROM Sales.Products
 )t WHERE distRank <= 0.4
 
