@@ -368,6 +368,51 @@ FROM
 FROM Sales.Products
 )t WHERE distRank <= 0.4
 
+--Analyze the Month-over-Month (MoM) performance by finding the percentage change
+--In Sales between the current and the previous month
+SELECT
+	*,
+	(CurrentMonthSales - previousMonthSales) AS MoM_Change,
+	ROUND(CAST((CurrentMonthSales - previousMonthSales) AS FLOAT)/previousMonthSales * 100, 2) AS percentChange
+FROM
+(SELECT
+	Month(OrderDate) AS orderMonth,
+	SUM(Sales) CurrentMonthSales,
+	LAG(SUM(Sales)) OVER(ORDER BY Month(OrderDate))  previousMonthSales
+FROM Sales.Orders
+GROUP BY Month(OrderDate)
+)t
+
+--Customer Retention Analysis
+--Analyze customer loyalty by ranking customers based on the average 
+--Number of days between orders
+SELECT
+	CustomerID,
+	AVG(DaysBetweenOrder) avgDays,
+	RANK() OVER(ORDER BY COALESCE(AVG(DaysBetweenOrder), 99999)) AS rankAvg
+FROM
+(SELECT
+	OrderID,
+	CustomerID,
+	OrderDate AS CurrentOrderDate,
+	LEAD(OrderDate) OVER(PARTITION BY CustomerID ORDER BY OrderDate) AS NextOrderDate,
+	DATEDIFF(Day, OrderDate, LEAD(OrderDate) OVER(PARTITION BY CustomerID ORDER BY OrderDate)) AS DaysBetweenOrder
+FROM Sales.Orders
+)t 
+GROUP BY CustomerID
+
+--Find the lowest and the highest sales of each prodouct
+--Find the difference in sales between the current and the lowest sales
+SELECT
+	ProductID,
+	Sales,
+	FIRST_VALUE(Sales) OVER(PARTITION BY ProductID ORDER BY Sales) AS lowestSales,
+	/*LAST_VALUE(Sales) OVER(PARTITION BY ProductID ORDER BY Sales
+	ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS highestSales,*/
+	FIRST_VALUE(Sales) OVER(PARTITION BY ProductID ORDER BY Sales DESC) AS highestSales,
+	Sales - FIRST_VALUE(Sales) OVER(PARTITION BY ProductID ORDER BY Sales) AS SalesDiff
+FROM Sales.Orders
+
 
 SELECT
 	*
