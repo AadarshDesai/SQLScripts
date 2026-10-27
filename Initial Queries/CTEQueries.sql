@@ -60,3 +60,54 @@ ON cr.CustomerID = c.CustomerID
 LEFT JOIN CTE_Segment sgmt
 ON sgmt.CustomerID = c.CustomerID
 ORDER BY totalSales DESC
+
+
+--Recursive CTE
+--Generate a sequence of Number from 1 to 20
+
+--CTE query
+WITH Series AS 
+(
+	--Anchor query
+	SELECT
+	1 AS MyNumber
+	UNION ALL
+	--Recursive query
+	SELECT
+	MyNumber + 1
+	FROM Series
+	WHERE MyNumber < 150
+)
+--Main Query
+SELECT *
+FROM Series
+OPTION (MAXRECURSION 200)
+
+--TASK: Show the employee hierarchy by displaying each employee's level within the organization
+WITH EmployeeHierarchy AS
+
+(
+	--Anchor query
+	SELECT
+		EmployeeID,
+		FirstName,
+		ManagerID,
+		1 AS Level
+	FROM Sales.Employees
+	WHERE ManagerID IS NULL
+	UNION ALL
+	SELECT
+		e.EmployeeID,
+		e.FirstName,
+		e.ManagerID,
+		Level + 1
+	FROM Sales.Employees e
+	INNER JOIN EmployeeHierarchy eh
+	ON e.ManagerID = eh.EmployeeID
+)
+
+SELECT *
+FROM EmployeeHierarchy
+
+SELECT *
+FROM Sales.Employees
