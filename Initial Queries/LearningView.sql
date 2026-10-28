@@ -60,6 +60,10 @@ LEFT JOIN Sales.Customers c
 ON c.CustomerID = o.CustomerID
 LEFT JOIN Sales.Employees e
 ON e.EmployeeID = o.SalesPersonID
+WHERE c.Country != 'USA'
 
 SELECT *
 FROM Sales.View_CombinedData
+
+SELECT *
+FROM Sales.View_EUSalesTeam
